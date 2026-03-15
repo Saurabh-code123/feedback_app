@@ -26,13 +26,15 @@ st.sidebar.title("Navigation")
 
 page = st.sidebar.radio(
     "Go to",
-    ["Submit Feedback", "View Feedback"]
+    ["Submit Feedback", "View Feedback", "Admin"]
 )
 
 # App title
 st.title("📝 Student Feedback App")
 
+# ------------------------
 # Submit Feedback Page
+# ------------------------
 if page == "Submit Feedback":
 
     st.header("Submit Your Feedback")
@@ -55,7 +57,9 @@ if page == "Submit Feedback":
                 conn.commit()
                 st.success("✅ Feedback submitted successfully!")
 
+# ------------------------
 # View Feedback Page
+# ------------------------
 elif page == "View Feedback":
 
     st.header("📢 All Feedback")
@@ -70,3 +74,43 @@ elif page == "View Feedback":
             st.markdown("---")
     else:
         st.info("No feedback yet. Be the first!")
+
+# ------------------------
+# Admin Panel
+# ------------------------
+elif page == "Admin":
+
+    st.header("🔒 Admin Panel")
+
+    password = st.text_input("Enter Admin Password", type="password")
+
+    if password == "Sau_123":
+
+        cursor.execute("SELECT * FROM feedback")
+        rows = cursor.fetchall()
+
+        if rows:
+            for row in rows:
+
+                col1, col2 = st.columns([4,1])
+
+                with col1:
+                    st.markdown(f"**👤 {row[1]}**")
+                    st.write(f"💬 {row[2]}")
+
+                with col2:
+                    if st.button("Delete", key=row[0]):
+                        cursor.execute(
+                            "DELETE FROM feedback WHERE id=?",
+                            (row[0],)
+                        )
+                        conn.commit()
+                        st.rerun()
+
+                st.markdown("---")
+
+        else:
+            st.info("No feedback available.")
+
+    elif password != "":
+        st.error("❌ Incorrect password")
