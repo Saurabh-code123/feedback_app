@@ -12,6 +12,7 @@ st.set_page_config(
 conn = sqlite3.connect("feedback.db", check_same_thread=False)
 cursor = conn.cursor()
 
+# Create table if it doesn't exist
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS feedback (
 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,18 +38,22 @@ if page == "Submit Feedback":
     st.header("Submit Your Feedback")
 
     with st.form("feedback_form"):
+
         name = st.text_input("👤 Your Name")
         message = st.text_area("💬 Your Feedback")
 
         submitted = st.form_submit_button("Submit Feedback")
 
         if submitted:
-            cursor.execute(
-                "INSERT INTO feedback (name, message) VALUES (?, ?)",
-                (name, message)
-            )
-            conn.commit()
-            st.success("✅ Feedback submitted successfully!")
+            if name.strip() == "" or message.strip() == "":
+                st.warning("⚠️ Please fill in both fields before submitting.")
+            else:
+                cursor.execute(
+                    "INSERT INTO feedback (name, message) VALUES (?, ?)",
+                    (name, message)
+                )
+                conn.commit()
+                st.success("✅ Feedback submitted successfully!")
 
 # View Feedback Page
 elif page == "View Feedback":
@@ -60,19 +65,8 @@ elif page == "View Feedback":
 
     if rows:
         for row in rows:
-            col1, col2 = st.columns([4,1])
-
-            with col1:
-                st.markdown(f"**👤 {row[1]}**")
-                st.write(f"💬 {row[2]}")
-
-            with col2:
-                if st.button("❌ Delete", key=row[0]):
-                    cursor.execute("DELETE FROM feedback WHERE id=?", (row[0],))
-                    conn.commit()
-                    st.rerun()
-
+            st.markdown(f"**👤 {row[1]}**")
+            st.write(f"💬 {row[2]}")
             st.markdown("---")
-
     else:
-        st.info("No feedback yet.")
+        st.info("No feedback yet. Be the first!")
